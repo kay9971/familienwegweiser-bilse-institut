@@ -482,7 +482,7 @@ function getJCById(id){return JOBCENTERS.find(j=>j.id===id)}
 function routeURL(addr){return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`}
 
 /* ===== Seed Loader (JSONs aus public/data einlesen) ===== */
-const SEED_VERSION = '2025-09-10-2'; // <- bei Datenänderung erhöhen
+const SEED_VERSION = '2025-09-10-3'; // <- bei Datenänderung erhöhen
 const DATA_BASE_URL = '/data';
 async function fetchJSON(path){const res=await fetch(path,{cache:'no-cache'});if(!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);return res.json()}
 async function loadSeed(){
@@ -960,5 +960,20 @@ function initData(){
   setActiveTab('start'); updateStartStats();
 })();
 </script>
+<script type="module">
+  // Sofort neu laden, wenn ein neuer Service Worker aktiv wird
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      // einmalig neu laden, wenn ein neuer SW übernimmt
+      if (!window.__reloaded__) { window.__reloaded__ = true; window.location.reload(); }
+    });
+  }
+  // Falls du vite-plugin-pwa nutzt: Registrierung (optional verstärken)
+  try {
+    const { registerSW } = await import('virtual:pwa-register');
+    registerSW({ immediate: true });
+  } catch (e) { /* in Dev/Tunnel ok */ }
+</script>
+
 </body>
 </html>
