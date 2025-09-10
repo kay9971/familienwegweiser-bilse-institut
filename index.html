@@ -482,7 +482,7 @@ function getJCById(id){return JOBCENTERS.find(j=>j.id===id)}
 function routeURL(addr){return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`}
 
 /* ===== Seed Loader (JSONs aus public/data einlesen) ===== */
-const SEED_VERSION = '2025-09-10-1'; // <- bei Datenänderung erhöhen
+const SEED_VERSION = '2025-09-10-2'; // <- bei Datenänderung erhöhen
 const DATA_BASE_URL = '/data';
 async function fetchJSON(path){const res=await fetch(path,{cache:'no-cache'});if(!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);return res.json()}
 async function loadSeed(){
