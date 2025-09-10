@@ -1,0 +1,26 @@
+{
+  "projekt": {
+    "title": "U(H)rWerk+ – Unterstützung von Familien",
+    "content_markdown": "Das BilSE-Projekt **U(H)rWerk+** unterstützt Familien und ihre Kinder in verschiedenen Lebenslagen.\n\nDiese App zeigt Standorte, Angebote, **Jobcenter-Infos**, Ansprechpartner:innen und einen **Kalender**."
+  },
+  "kontakt": {
+    "title": "Kontakt & Anlaufstelle",
+    "content_markdown": "Wähle oben **„Mein Standort“**, um die Kontaktdaten deiner Anlaufstelle zu sehen."
+  },
+  "but": {
+    "title": "Bildung und Teilhabe (BuT)",
+    "content_markdown": "Informationen zur Bildungs- und Teilhabekarte (BuT) in der Region.\n\n- Anspruch\n- Leistungen\n- Vorgehen"
+  },
+  "beratung": {
+    "title": "Beratungsstellen",
+    "content_markdown": "Hier finden Sie wichtige Ansprechpartner:innen und Telefonnummern.\n\n> Tipp: Nutzen Sie die Standorte-Ansicht für **Klick-Anruf**."
+  },
+  "impressum": {
+    "title": "Impressum",
+    "content_markdown": "BilSE-Institut für Bildung und Forschung e.V.\n\n(Platzhalter – bitte offiziell ergänzen)"
+  },
+  "datenschutz": {
+    "title": "Datenschutz",
+    "content_markdown": "Diese Demoversion speichert **keine personenbezogenen Daten**.\n\n(Platzhalter – bitte offizielle Hinweise einfügen.)"
+  }
+}

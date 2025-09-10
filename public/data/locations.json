@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "label": "Standort Hagenow",
+    "street": "Möllner Str.",
+    "house_number": "51a",
+    "postal_code": "19230",
+    "city": "Hagenow",
+    "phone_display": "Fon. 03883 - 621680",
+    "phone_e164": "+493883621680",
+    "service_areas": [],
+    "jobcenter_id": "jc_lup",
+    "lat": 53.431,
+    "lng": 11.19
+  },
+  {
+    "id": 2,
+    "label": "Standort Ludwigslust",
+    "street": "Techentiner Weg",
+    "house_number": "1B",
+    "postal_code": "19288",
+    "city": "Ludwigslust",
+    "phone_display": "Fon. 03874 - 417677",
+    "phone_e164": "+493874417677",
+    "service_areas": [],
+    "jobcenter_id": "jc_lup",
+    "lat": 53.328,
+    "lng": 11.497
+  },
+  {
+    "id": 3,
+    "label": "Standort Schwerin",
+    "street": "Dreescher Markt",
+    "house_number": "2",
+    "postal_code": "19061",
+    "city": "Schwerin",
+    "phone_display": "Fon. 0385 - 48938070",
+    "phone_e164": "+4938548938070",
+    "service_areas": [],
+    "jobcenter_id": "jc_schwerin",
+    "lat": 53.629,
+    "lng": 11.415
+  },
+  {
+    "id": 4,
+    "label": "Standort Wismar",
+    "street": "Kanalstraße",
+    "house_number": "20",
+    "postal_code": "23970",
+    "city": "Wismar",
+    "phone_display": "Fon. 03841 - 303309024",
+    "phone_e164": "+493841303309024",
+    "service_areas": [],
+    "jobcenter_id": "jc_nwm",
+    "lat": 53.891,
+    "lng": 11.465
+  },
+  {
+    "id": 5,
+    "label": "Standort Parchim/Sternberg/Lübz",
+    "street": "Ludwigsluster Str.",
+    "house_number": "29",
+    "postal_code": "19370",
+    "city": "Parchim",
+    "phone_display": "Fon. 03871 - 4500151",
+    "phone_e164": "+4938714500151",
+    "service_areas": [
+      "Sternberg",
+      "Lübz"
+    ],
+    "jobcenter_id": "jc_lup",
+    "lat": 53.426,
+    "lng": 11.848
+  },
+  {
+    "id": 6,
+    "label": "Standort Rostock/Bad Doberan",
+    "street": "An der Jägerbäk",
+    "house_number": "4",
+    "postal_code": "18069",
+    "city": "Rostock",
+    "phone_display": "Fon: 0381 - 364466170",
+    "phone_e164": "+49381364466170",
+    "service_areas": [
+      "Bad Doberan"
+    ],
+    "jobcenter_id": "jc_hanse_rostock",
+    "lat": 54.092,
+    "lng": 12.099
+  },
+  {
+    "id": 7,
+    "label": "Standort Gadebusch",
+    "street": "Mühlenstraße",
+    "house_number": "26",
+    "postal_code": "19205",
+    "city": "Gadebusch",
+    "phone_display": "Tel: 03886 - 7155428",
+    "phone_e164": "+4938867155428",
+    "service_areas": [],
+    "jobcenter_id": "jc_nwm",
+    "lat": 53.701,
+    "lng": 11.117
+  },
+  {
+    "id": 8,
+    "label": "Standort Güstrow/Teterow/Bützow",
+    "street": "Eisenbahnstraße",
+    "house_number": "3",
+    "postal_code": "18273",
+    "city": "Güstrow",
+    "phone_display": "Fon. 03843 - 7736215",
+    "phone_e164": "+4938437736215",
+    "service_areas": [
+      "Teterow",
+      "Bützow"
+    ],
+    "jobcenter_id": "jc_lro",
+    "lat": 53.797,
+    "lng": 12.173
+  }
+]

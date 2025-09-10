@@ -1,0 +1,23 @@
+[
+  {
+    "id": 101,
+    "title": "Gemeinsames Kochen Test",
+    "description": "Gesundes Frühstück für Familien.",
+    "starts_at": "2025-09-09T12:27:09.357Z",
+    "ends_at": "2025-09-09T14:27:09.357Z",
+    "category": "Kochen",
+    "location_id": 3,
+    "source": "project"
+  },
+  {
+    "id": 102,
+    "title": "Familiennachmittag",
+    "description": "Spiel & Austausch für Eltern und Kinder.",
+    "starts_at": "2025-09-11T00:27:09.357Z",
+    "ends_at": "2025-09-11T02:27:09.357Z",
+    "category": "freizeit",
+    "location_id": 4,
+    "source": "project",
+    "free_address": "Spielplatz am Dreescher Markt, 19061 Schwerin"
+  }
+]

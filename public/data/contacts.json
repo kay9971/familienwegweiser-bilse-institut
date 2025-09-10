@@ -1,0 +1,202 @@
+[
+  {
+    "id": 1,
+    "location_id": 3,
+    "name": "Mandy Tessmann",
+    "role": "Projektmitarbeiterin U(H)rWerk+ Schwerin",
+    "phone_e164": "+4938548938070",
+    "email": "mandy.tessmann@bilse.de",
+    "office_hours": "Mo–Do 9–15 Uhr, Fr 9-12 Uhr",
+    "notes": ""
+  },
+  {
+    "id": 2,
+    "location_id": 7,
+    "name": "Jana Kaule",
+    "role": "Projektmitarbeiterin U(H)rWerk+ Gadebusch",
+    "phone_e164": "+4938867155428",
+    "email": "jana.kaule@bilse.de",
+    "office_hours": "Mo–Do 9–15 Uhr, Fr 9-12 Uhr",
+    "notes": ""
+  },
+  {
+    "id": 3,
+    "location_id": 4,
+    "name": "Nancy Wenzlaff",
+    "role": "Projektmitarbeiterin U(H)rWerk+ Wismar",
+    "phone_e164": "+493481303309024",
+    "email": "nancy.wenzlaff@bilse.de",
+    "office_hours": "Mo–Do 9–15 Uhr, Fr 9-12 Uhr",
+    "notes": ""
+  },
+  {
+    "id": 4,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 5,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 6,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 7,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 8,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 9,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 10,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 11,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 12,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 13,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 14,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 15,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 16,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 17,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 18,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 19,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  },
+  {
+    "id": 20,
+    "location_id": 7,
+    "name": "Neue Person",
+    "role": "",
+    "phone_e164": "",
+    "email": "",
+    "office_hours": "",
+    "notes": ""
+  }
+]

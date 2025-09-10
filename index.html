@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Familienwegweiser – BilSE</title>
+
+<!-- Leaflet (OSM) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+:root{
+  /* dunkles Fallback-Theme (wird durch body.light überschrieben) */
+  --bg:#0b1020; --card:#141a2a; --text:#e6e8ee; --muted:#9aa3b2;
+  --primary:#0e7ac4; --ring:rgba(14,122,196,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.container{max-width:1200px;margin:0 auto;padding:16px 20px 150px}
+.header{display:flex;align-items:center;gap:16px;padding:14px 20px;position:sticky;top:0;background:linear-gradient(180deg, rgba(11,16,32,.95), rgba(11,16,32,.75));backdrop-filter: blur(8px);z-index:5;border-bottom:1px solid #1f2436}
+.brand{font-weight:700;font-size:18px;letter-spacing:.2px}
+.badge{background:#16314a;color:#a8def7;padding:2px 8px;border-radius:999px;font-size:12px}
+.nav{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.tab{border:1px solid #223048;background:#152033;color:#cfe4ff;padding:8px 12px;border-radius:10px;cursor:pointer}
+.tab.active{background:var(--primary);color:#00131e;border-color:transparent;box-shadow:0 0 0 4px var(--ring)}
+.selector{margin-left:12px;display:flex;align-items:center;gap:8px}
+.select{background:#101629;border:1px solid #223048;border-radius:10px;color:#e6e8ee;padding:8px 10px;outline:none;min-width:220px}
+.select:focus{box-shadow:0 0 0 4px var(--ring);border-color:transparent}
+.main{margin-top:18px;display:grid;gap:18px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}
+.input,select,textarea{background:#101629;border:1px solid #223048;border-radius:10px;color:#e6e8ee;padding:10px 12px;outline:none}
+.input,select{min-width:220px}
+textarea{width:100%;min-height:160px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px var(--ring);border-color:transparent}
+.button{background:var(--primary);border:none;color:#002133;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+.button.ghost{background:#152033;color:#cfe4ff;border:1px solid #223048}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid #1f2436;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.kicker{color:#9aa3b2;font-size:12px}
+.title{font-size:18px;font-weight:700}
+.addr{color:#c8d1e0}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{background:#1a2a3d;color:#93b7d7;border:1px solid #254766;border-radius:999px;padding:3px 8px;font-size:12px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.small{font-size:12px;color:#a8b4c6}
+.notice{padding:10px 12px;background:#182338;border:1px dashed #27405c;border-radius:12px;color:#9ec3e6}
+.hidden{display:none}
+hr{border:0;border-top:1px solid #263049;margin:8px 0}
+.footer{position:fixed;left:0;bottom:0;width:100%;background:linear-gradient(0deg, rgba(11,16,32,.95), rgba(11,16,32,.6));backdrop-filter: blur(8px);border-top:1px solid #1f2436}
+.footer .bar{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.lang{display:flex;gap:6px}
+.lang button{background:#17253a;border:1px solid #223048;color:#a9c6dd;border-radius:10px;padding:6px 10px;cursor:pointer}
+.lang button.active{background:#0b2740;color:#bff;box-shadow:0 0 0 3px var(--ring);border-color:transparent}
+
+/* Map containers */
+#loc-map, #ev-map, #jc-map{height:380px;border-radius:14px;overflow:hidden;border:1px solid #1f2436}
+.leaflet-container{background:#0b1020}
+.badge-pill{background:#0b2740;border:1px solid #203450;color:#a8def7;padding:2px 8px;border-radius:999px;font-size:12px}
+
+/* Dev */
+.devgrid{display:grid;grid-template-columns:1fr;gap:16px}
+.devrow{display:flex;gap:8px;flex-wrap:wrap}
+.devrow .button{white-space:nowrap}
+
+/* === Start (Hero + Quick Tiles) === */
+.hero{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.hero-left{background:linear-gradient(135deg,#0e7ac4 0%, #0b2740 100%);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.hero h1{margin:0;font-size:28px;line-height:1.2}
+.hero p{margin:0;color:#e7f5ff}
+.hero .actions{display:flex;gap:10px;flex-wrap:wrap}
+.hero-stat{background:#152033;border:1px solid #223048;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.hero-stat .num{font-size:26px;font-weight:800}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.tile{background:var(--card);border:1px solid #1f2436;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;cursor:pointer}
+.tile:hover{box-shadow:0 0 0 4px var(--ring);border-color:transparent}
+.tile .desc{color:#9fb3c9;font-size:13px}
+.tile .go{margin-top:auto;align-self:flex-start}
+
+/* ==== BilSE Light Theme (mit höherem Kontrast) ==== */
+body.light{
+  --bg:#F5F7FB;
+  --card:#FFFFFF;
+  --text:#0A0E1A;
+  --muted:#374151;
+  --primary:#0E7AC4;
+  --ring:rgba(14,122,196,.25);
+}
+body.light .header{ background:#ffffffcc; border-bottom:1px solid #e5e7eb; }
+body.light .footer{ background:#ffffffcc; border-top:1px solid #e5e7eb; }
+body.light .tab{ background:#f7f9fc; color:#0a0e1a; border-color:#d8e1ee; }
+body.light .tab.active{ background:var(--primary); color:#ffffff; }
+body.light .input, body.light select, body.light textarea{ background:#ffffff; border-color:#d8e1ee; color:#0a0e1a; }
+body.light .card{ background:#ffffff; border-color:#dfe5f0; box-shadow:0 2px 6px rgba(15,23,42,.08); }
+body.light .notice{ background:#f1f7fd; border:1px dashed #cde6fb; color:#0a0e1a; }
+body.light .badge{ background:#e8f4ff; color:#0e7ac4; }
+body.light .badge-pill{ background:#e8f4ff; border-color:#d6e9fb; color:#0e7ac4; }
+body.light .leaflet-container{ background:#eef3fb; }
+body.light .title, body.light .brand{ color:#0a0e1a; }
+body.light .small, body.light .kicker, body.light .tile .desc, body.light .addr{ color:#374151; }
+
+/* Safety: nichts deckt den Inhalt zu */
+.header{z-index:10}
+.container{position:relative; z-index:2}
+.footer{z-index:5}
+section.hidden{display:none !important}
+/* Start-Tab: Überblick-Panel im Light-Theme heller */
+body.light .hero-stat{
+  background:#ffffff;           /* neutral hell */
+  border:1px solid #dfe5f0;
+  color:var(--text);
+  box-shadow:0 2px 6px rgba(15,23,42,.06);
+}
+
+body.light .hero-stat .kicker{ color:#374151; }
+body.light .hero-stat .num{ color:#0A0E1A; }
+
+</style>
+</head>
+<body>
+  <header class="header">
+    <div class="row" style="gap:10px">
+      <img src="/icons/icon-192.png" alt="" style="height:22px;width:22px;border-radius:6px;display:block">
+      <div class="brand">Familienwegweiser</div>
+    </div>
+    <span class="badge mono">Demo · Single-File</span>
+    <div class="selector">
+      <label for="my-location" class="small">Mein Standort</label>
+      <select id="my-location" class="select"></select>
+    </div>
+    <nav class="nav">
+      <button class="tab active" data-tab="start">Start</button>
+      <button class="tab" data-tab="locations">Standorte</button>
+      <button class="tab" data-tab="events">Kalender</button>
+      <button class="tab" data-tab="projekt">Projekt U(H)rWerk+</button>
+      <button class="tab" data-tab="jobcenter">Jobcenter</button>
+      <button class="tab" data-tab="notfall">Notfall</button>
+      <button class="tab" data-tab="pages">Infos</button>
+      <button class="tab" data-tab="dev" id="dev-tab" style="display:none">Dev</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- START -->
+    <section id="start" class="main">
+      <div class="hero">
+        <div class="hero-left">
+          <h1>BilSE Familienwegweiser</h1>
+          <p>Alle Standorte, Termine, Jobcenter-Links und Ansprechpartner:innen in einer App – lokal für deine Region.</p>
+          <div class="actions">
+            <button class="button" data-goto="locations">Standorte ansehen</button>
+            <button class="button ghost" data-goto="jobcenter">Mein Jobcenter</button>
+            <button class="button ghost" data-goto="notfall">Notfall</button>
+          </div>
+        </div>
+        <div class="hero-stat">
+          <div class="kicker">Überblick</div>
+          <div class="row">
+            <div>
+              <div class="num" id="stat-loc">–</div>
+              <div class="small">Standorte</div>
+            </div>
+            <div>
+              <div class="num" id="stat-ev">–</div>
+              <div class="small">Termine (kommend)</div>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <div class="num" id="stat-jc">–</div>
+              <div class="small">Jobcenter</div>
+            </div>
+            <div>
+              <div class="num" id="stat-ct">–</div>
+              <div class="small">Ansprechpartner</div>
+            </div>
+          </div>
+          <div class="small">Datenstand: <span id="stat-ver">–</span></div>
+        </div>
+      </div>
+
+      <div class="tiles">
+        <div class="tile" data-goto="locations">
+          <div class="title">Standorte & Karte</div>
+          <div class="desc">Anlaufstellen mit Adresse, Anruf & Route. Wähle deinen Standort.</div>
+          <button class="button go">Öffnen</button>
+        </div>
+        <div class="tile" data-goto="events">
+          <div class="title">Kalender</div>
+          <div class="desc">Projekttermine & öffentliche Veranstaltungen. ICS-Export inklusive.</div>
+          <button class="button go">Öffnen</button>
+        </div>
+        <div class="tile" data-goto="jobcenter">
+          <div class="title">Jobcenter & Downloads</div>
+          <div class="desc">Zuständiges Jobcenter, Downloadcenter & Jobcenter.Digital.</div>
+          <button class="button go">Öffnen</button>
+        </div>
+        <div class="tile" data-goto="pages">
+          <div class="title">Infos & BuT</div>
+          <div class="desc">Wichtige Informationen, BuT, Kontakt & Rechtliches.</div>
+          <button class="button go">Öffnen</button>
+        </div>
+        <div class="tile" data-goto="notfall">
+          <div class="title">Notfall</div>
+          <div class="desc">Alle wichtigen Nummern – Klick zum Anrufen.</div>
+          <button class="button go">Öffnen</button>
+        </div>
+        <div class="tile" data-goto="projekt">
+          <div class="title">Ansprechpartner:innen</div>
+          <div class="desc">U(H)rWerk+ vor Ort: direkte Kontakte & Sprechzeiten.</div>
+          <button class="button go">Öffnen</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STANDORTE -->
+    <section id="locations" class="main hidden">
+      <div class="toolbar">
+        <input id="loc-search" class="input" placeholder="Suche Stadt, PLZ oder Servicegebiet …">
+        <select id="loc-sort">
+          <option value="city">Sortieren: Stadt</option>
+          <option value="label">Sortieren: Standort-Name</option>
+          <option value="postal">Sortieren: PLZ</option>
+        </select>
+        <span class="badge-pill">Karte</span>
+      </div>
+      <div id="loc-map"></div>
+      <div id="loc-grid" class="grid"></div>
+    </section>
+
+    <!-- KALENDER -->
+    <section id="events" class="main hidden">
+      <div class="toolbar">
+        <input id="ev-search" class="input" placeholder="Suche Titel/Beschreibung …">
+        <select id="ev-category">
+          <option value="">Alle Kategorien</option>
+          <option value="beratung">Beratung</option>
+          <option value="freizeit">Freizeit</option>
+          <option value="bildung">Bildung</option>
+          <option value="gesundheit">Gesundheit</option>
+          <option value="behoerden">Behörden</option>
+          <option value="notfall">Notfall</option>
+        </select>
+        <select id="ev-source">
+          <option value="">Quelle: Alle</option>
+          <option value="project">Projekt</option>
+          <option value="public">Öffentlich</option>
+        </select>
+        <label class="row small"><input type="checkbox" id="ev-map-toggle" style="margin-right:8px"> Karte anzeigen</label>
+      </div>
+      <p class="small notice" id="ev-hint"></p>
+      <div id="ev-map" class="hidden"></div>
+      <div id="ev-grid" class="grid"></div>
+    </section>
+
+    <!-- PROJEKT U(H)rWerk+ (Ansprechpartner) -->
+    <section id="projekt" class="main hidden">
+      <article class="card">
+        <div class="title">Ansprechpartner:innen am ausgewählten Standort</div>
+        <div id="contacts-list"></div>
+        <div class="small notice">Pflege im Dev-Tab → contacts.json</div>
+      </article>
+    </section>
+
+    <!-- JOBCENTER -->
+    <section id="jobcenter" class="main hidden">
+      <article class="card" id="jc-card">
+        <div class="title">Dein Jobcenter</div>
+        <div id="jc-content" class="small"></div>
+      </article>
+      <div id="jc-map" class="hidden"></div>
+      <div class="grid" id="jc-panels"></div>
+    </section>
+
+    <!-- NOTFALL -->
+    <section id="notfall" class="main hidden">
+      <article class="card">
+        <div class="title">Wichtige Notfallnummern</div>
+        <div id="emergency-list"></div>
+      </article>
+    </section>
+
+    <!-- SEITEN -->
+    <section id="pages" class="main hidden">
+      <div class="toolbar">
+        <select id="page-select">
+          <option value="projekt">Projekt</option>
+          <option value="kontakt">Kontakt (mein Standort)</option>
+          <option value="but">Bildung & Teilhabe</option>
+          <option value="beratung">Beratung</option>
+          <option value="impressum">Impressum</option>
+          <option value="datenschutz">Datenschutz</option>
+        </select>
+      </div>
+      <article id="page-view" class="card">
+        <h2 class="title" id="page-title"></h2>
+        <div id="page-content"></div>
+      </article>
+    </section>
+
+    <!-- DEV -->
+    <section id="dev" class="main hidden">
+      <article class="card">
+        <div class="title">Dev-Tools</div>
+        <p class="small">Änderungen werden im Browser (localStorage) gespeichert. „Export“ lädt JSONs herunter. Für globale Änderungen verwende die JSONs in <code>public/data/</code> und erhöhe <code>SEED_VERSION</code>.</p>
+
+        <div class="devgrid">
+          <!-- Zuordnung + Geocoding -->
+          <div>
+            <h3 class="title">Zuordnung: Standorte ↔ Jobcenter <span class="badge-pill">+ Geocode</span></h3>
+            <div class="devrow">
+              <button class="button ghost" id="geocode-all">Alle geocoden (sparsam nutzen)</button>
+            </div>
+            <div id="map-jc"></div>
+          </div>
+
+          <hr>
+
+          <!-- Jobcenters -->
+          <div>
+            <h3 class="title">Jobcenter (<span id="jc-count">0</span>)</h3>
+            <div class="devrow">
+              <input type="file" id="import-jc" accept=".json" class="input">
+              <button class="button" id="export-jc">Export jobcenters.json</button>
+              <button class="button ghost" id="apply-jc">Übernehmen</button>
+              <button class="button ghost" id="add-jc">Neu</button>
+            </div>
+            <textarea id="jc-json"></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Locations -->
+          <div>
+            <h3 class="title">Standorte (<span id="loc-count">0</span>)</h3>
+            <div class="devrow">
+              <input type="file" id="import-loc" accept=".json" class="input">
+              <button class="button" id="export-loc">Export locations.json</button>
+              <button class="button ghost" id="apply-loc">Übernehmen</button>
+              <button class="button ghost" id="add-loc">Neu</button>
+            </div>
+            <textarea id="loc-json"></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Contacts -->
+          <div>
+            <h3 class="title">Contacts / Ansprechpartner (<span id="ct-count">0</span>)</h3>
+            <div class="devrow">
+              <input type="file" id="import-ct" accept=".json" class="input">
+              <button class="button" id="export-ct">Export contacts.json</button>
+              <button class="button ghost" id="apply-ct">Übernehmen</button>
+              <button class="button ghost" id="add-ct">Neu</button>
+              <select id="ct-location" class="select"></select>
+            </div>
+            <textarea id="ct-json"></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Events + ICS -->
+          <div>
+            <h3 class="title">Events (<span id="ev-count">0</span>)</h3>
+            <div class="devrow">
+              <input type="file" id="import-ev" accept=".json" class="input">
+              <button class="button" id="export-ev">Export events.json</button>
+              <button class="button ghost" id="apply-ev">Übernehmen</button>
+              <button class="button ghost" id="add-ev">Neu</button>
+            </div>
+            <textarea id="ev-json"></textarea>
+
+            <div class="devrow">
+              <span class="badge-pill">ICS Import (öffentliche Termine)</span>
+              <input type="file" id="import-ics" accept=".ics,text/calendar" class="input">
+              <select id="ics-location" class="select"></select>
+              <button class="button" id="import-ics-run">ICS einlesen</button>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- Pages -->
+          <div>
+            <h3 class="title">Seiten (<span id="pg-count">0</span>)</h3>
+            <div class="devrow">
+              <input type="file" id="import-pg" accept=".json" class="input">
+              <button class="button" id="export-pg">Export pages.json</button>
+              <button class="button ghost" id="apply-pg">Übernehmen</button>
+              <button class="button ghost" id="add-pg">Neu</button>
+            </div>
+            <textarea id="pg-json"></textarea>
+          </div>
+
+          <hr>
+
+          <div class="devrow">
+            <button class="button" id="export-all">Export alle JSONs</button>
+            <button class="button ghost" id="save-local">Im Browser speichern</button>
+            <button class="button ghost" id="reset-local">Zurücksetzen (Defaults)</button>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="bar">
+      <div class="quick">
+        <a class="button" href="tel:112" style="background:#ef4444;color:#fff;border:none">112 Notruf</a>
+        <a class="button" href="tel:110" style="background:#ef4444;color:#fff;border:none">110 Polizei</a>
+        <a class="button" href="tel:116117" style="background:#ef4444;color:#fff;border:none">116117 Ärztlicher Dienst</a>
+      </div>
+      <span class="small">© BilSE – Demo ohne Server. Single-File mit Karte & Dev · Datenstand: <span id="data-ver">–</span></span>
+      <div class="lang">
+        <button data-lang="de" class="active">DE</button>
+        <button data-lang="en">EN</button>
+      </div>
+    </div>
+  </footer>
+
+<script>
+/* ===== Defaults (Fallbacks – werden durch Seed/LocalStorage überschrieben) ===== */
+const DEFAULT_LOCATIONS=[
+  {"id":1,"label":"Standort Hagenow","street":"Möllner Str.","house_number":"51a","postal_code":"19230","city":"Hagenow","phone_display":"Fon. 03883 - 621680","phone_e164":"+493883621680","service_areas":[],"jobcenter_id":"jc_lup","lat":53.431,"lng":11.19},
+  {"id":2,"label":"Standort Ludwigslust","street":"Techentiner Weg","house_number":"1B","postal_code":"19288","city":"Ludwigslust","phone_display":"Fon. 03874 - 417677","phone_e164":"+493874417677","service_areas":[],"jobcenter_id":"jc_lup","lat":53.328,"lng":11.497},
+  {"id":3,"label":"Standort Schwerin","street":"Dreescher Markt","house_number":"2","postal_code":"19061","city":"Schwerin","phone_display":"Fon. 0385 - 48938070","phone_e164":"+4938548938070","service_areas":[],"jobcenter_id":"jc_schwerin","lat":53.629,"lng":11.415},
+  {"id":4,"label":"Standort Wismar","street":"Kanalstraße","house_number":"20","postal_code":"23970","city":"Wismar","phone_display":"Fon. 03841 - 303309024","phone_e164":"+493841303309024","service_areas":[],"jobcenter_id":"jc_nwm","lat":53.891,"lng":11.465},
+  {"id":5,"label":"Standort Parchim/Sternberg/Lübz","street":"Ludwigsluster Str.","house_number":"29","postal_code":"19370","city":"Parchim","phone_display":"Fon. 03871 - 4500151","phone_e164":"+4938714500151","service_areas":["Sternberg","Lübz"],"jobcenter_id":"jc_lup","lat":53.426,"lng":11.848},
+  {"id":6,"label":"Standort Rostock/Bad Doberan","street":"An der Jägerbäk","house_number":"4","postal_code":"18069","city":"Rostock","phone_display":"Fon: 0381 - 364466170","phone_e164":"+49381364466170","service_areas":["Bad Doberan"],"jobcenter_id":"jc_hanse_rostock","lat":54.092,"lng":12.099},
+  {"id":7,"label":"Standort Gadebusch","street":"Mühlenstraße","house_number":"26","postal_code":"19205","city":"Gadebusch","phone_display":"Tel: 03886 - 7155428","phone_e164":"+4938867155428","service_areas":[],"jobcenter_id":"jc_nwm","lat":53.701,"lng":11.117},
+  {"id":8,"label":"Standort Güstrow/Teterow/Bützow","street":"Eisenbahnstraße","house_number":"3","postal_code":"18273","city":"Güstrow","phone_display":"Fon. 03843 - 7736215","phone_e164":"+4938437736215","service_areas":["Teterow","Bützow"],"jobcenter_id":"jc_lro","lat":53.797,"lng":12.173}
+];
+const DEFAULT_JOBCENTERS=[
+  {"id":"jc_lup","name":"Jobcenter Ludwigslust-Parchim","region":"Landkreis Ludwigslust-Parchim","website_url":"https://www.jobcenter-lwl-pch.de/","downloads_url":"https://www.jobcenter-lwl-pch.de/service/downloads","digital_url":"https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld","contact":{"phone":"+49 3871 6345-0","email":null,"address":"Ludwigsluster Chaussee 5, 19370 Parchim","opening_hours":"Siehe Website"}},
+  {"id":"jc_schwerin","name":"Jobcenter Schwerin","region":"Landeshauptstadt Schwerin","website_url":"https://www.schwerin.de/mein-schwerin/leben/gesellschaft-soziales/sozialleistungen/jobcenter/","downloads_url":"https://www.arbeitsagentur.de/downloads","digital_url":"https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld","contact":{"phone":"+49 385 450-5892","email":null,"address":"Am Margaretenhof 14–16, 19057 Schwerin","opening_hours":"Siehe Website"}},
+  {"id":"jc_nwm","name":"Jobcenter Nordwestmecklenburg","region":"Landkreis Nordwestmecklenburg","website_url":"https://www.jobcenter-nwm.de/","downloads_url":"https://www.jobcenter-nwm.de/formulare-merkblaetter/","digital_url":"https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld","contact":{"phone":"+49 3841 414-0","email":"JC-Nordwestmecklenburg@jobcenter-ge.de","address":"Werkstraße 2, 23970 Wismar","opening_hours":"Siehe Website"}},
+  {"id":"jc_lro","name":"Jobcenter Landkreis Rostock","region":"Landkreis Rostock","website_url":"https://www.arbeitsagentur.de/vor-ort/jobcenter/jobcenter-landkreis-rostock-guestrow.html","downloads_url":"https://www.arbeitsagentur.de/downloads","digital_url":"https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld","contact":{"phone":"+49 3843 775-0","email":"Jobcenter-Landkreis-Rostock@jobcenter-ge.de","address":"Eisenbahnstr. 12, 18273 Güstrow","opening_hours":"Siehe Website"}},
+  {"id":"jc_hanse_rostock","name":"Hanse-Jobcenter Rostock","region":"Hansestadt Rostock","website_url":"https://www.arbeitsagentur.de/vor-ort/jobcenter/hanse-jobcenter-rostock-rostock.html","downloads_url":"https://www.arbeitsagentur.de/downloads","digital_url":"https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld","contact":{"phone":"+49 381 4611-0","email":"hanse-jobcenter-rostock@jobcenter-ge.de","address":"Erich-Schlesinger-Str. 35, 18059 Rostock","opening_hours":"Siehe Website"}}
+];
+const DEFAULT_EMERGENCY=[
+  {"label":"112 – Feuerwehr & Rettungsdienst","tel":"112"},
+  {"label":"110 – Polizei","tel":"110"},
+  {"label":"116117 – Ärztlicher Bereitschaftsdienst","tel":"116117"},
+  {"label":"116 016 – Hilfetelefon Gewalt gegen Frauen","tel":"116016"},
+  {"label":"116 123 – TelefonSeelsorge","tel":"116123"},
+  {"label":"116 111 – Kinder- & Jugendtelefon","tel":"116111"},
+  {"label":"116 006 – Opferhilfe Weißer Ring","tel":"116006"}
+];
+const DEFAULT_EVENTS=[
+  {"id":101,"title":"Offene Beratung","description":"Niedrigschwellige Beratung – ohne Termin.","starts_at":new Date(Date.now()+2*3600e3).toISOString(),"ends_at":new Date(Date.now()+4*3600e3).toISOString(),"category":"beratung","location_id":3,"source":"project"},
+  {"id":102,"title":"Familiennachmittag","description":"Spiel & Austausch für Eltern und Kinder.","starts_at":new Date(Date.now()+24*3600e3+14*3600e3).toISOString(),"ends_at":new Date(Date.now()+24*3600e3+16*3600e3).toISOString(),"category":"freizeit","location_id":3,"source":"project","free_address":"Spielplatz am Dreescher Markt, 19061 Schwerin"}
+];
+const DEFAULT_PAGES={
+  "projekt":{"title":"U(H)rWerk+ – Unterstützung von Familien","content_markdown":"Das BilSE-Projekt **U(H)rWerk+** unterstützt Familien und ihre Kinder in verschiedenen Lebenslagen.\n\nDiese App zeigt Standorte, Angebote, **Jobcenter-Infos**, Ansprechpartner:innen und einen **Kalender**."},
+  "kontakt":{"title":"Kontakt & Anlaufstelle","content_markdown":"Wähle oben **„Mein Standort“**, um die Kontaktdaten deiner Anlaufstelle zu sehen."},
+  "but":{"title":"Bildung und Teilhabe (BuT)","content_markdown":"Informationen zur Bildungs- und Teilhabekarte (BuT) in der Region.\n\n- Anspruch\n- Leistungen\n- Vorgehen"},
+  "beratung":{"title":"Beratungsstellen","content_markdown":"Hier finden Sie wichtige Ansprechpartner:innen und Telefonnummern.\n\n> Tipp: Nutzen Sie die Standorte-Ansicht für **Klick-Anruf**."},
+  "impressum":{"title":"Impressum","content_markdown":"BilSE-Institut für Bildung und Forschung e.V.\n\n(Platzhalter – bitte offiziell ergänzen)"},
+  "datenschutz":{"title":"Datenschutz","content_markdown":"Diese Demoversion speichert **keine personenbezogenen Daten**.\n\n(Platzhalter – bitte offizielle Hinweise einfügen.)"}
+};
+const DEFAULT_CONTACTS=[
+  {"id":1,"location_id":3,"name":"Max Beispiel","role":"Koordination U(H)rWerk+ Schwerin","phone_e164":"+4938548938070","email":"max.beispiel@bilse.de","office_hours":"Mo–Do 9–15 Uhr","notes":""},
+  {"id":2,"location_id":3,"name":"Anna Muster","role":"Familienberatung","phone_e164":"+4938548938070","email":"anna.muster@bilse.de","office_hours":"Di & Do 10–14 Uhr","notes":""}
+];
+
+/* ===== Laufzeitdaten ===== */
+let LOCATIONS=[], JOBCENTERS=[], EMERGENCY=[], EVENTS=[], PAGES={}, CONTACTS=[];
+let LANG="de", MY_LOCATION="all";
+const TABS=["start","locations","events","projekt","jobcenter","notfall","pages","dev"];
+
+/* ===== Utils ===== */
+const $=(s)=>document.querySelector(s); const $$=(s)=>document.querySelectorAll(s);
+const saveLS=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const loadLS=(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}};
+function downloadJSON(filename, obj){const blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
+function mdToHtml(md){let html=md.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");html=html.replace(/^> (.*)$/gm,"<blockquote>$1</blockquote>");html=html.replace(/^\- (.*)$/gm,"<li>$1</li>");html=html.replace(/(<li>.*<\/li>)/gs,"<ul>$1</ul>");html=html.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");html=html.replace(/\*(.*?)\*/g,"<em>$1</em>");html=html.replace(/\n\n/g,"<br><br>");return html}
+function fmtDateRange(a,b){const s=new Date(a),e=new Date(b||a);const same=s.toDateString()===e.toDateString();const fm=(d)=>d.toLocaleString(LANG==="de"?"de-DE":"en-GB",{dateStyle:"medium",timeStyle:"short"});return same?`${fm(s)} – ${e.toLocaleTimeString(LANG==="de"?"de-DE":"en-GB",{timeStyle:"short"})}`:`${fm(s)} – ${fm(e)}`}
+function escapeICS(s){return String(s).replace(/([,;])/g,"\\$1").replace(/\n/g,"\\n")}
+function getLocationById(id){return LOCATIONS.find(l=>String(l.id)===String(id))}
+function getJCById(id){return JOBCENTERS.find(j=>j.id===id)}
+function routeURL(addr){return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`}
+
+/* ===== Seed Loader (JSONs aus public/data einlesen) ===== */
+const SEED_VERSION = '2025-09-10-1'; // <- bei Datenänderung erhöhen
+const DATA_BASE_URL = '/data';
+async function fetchJSON(path){const res=await fetch(path,{cache:'no-cache'});if(!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);return res.json()}
+async function loadSeed(){
+  try{
+    const v=localStorage.getItem('bilse_seed_version');
+    if(v===SEED_VERSION) return;
+    const [locs,jcs,emg,evs,pgs,cts]=await Promise.all([
+      fetchJSON(`${DATA_BASE_URL}/locations.json`),
+      fetchJSON(`${DATA_BASE_URL}/jobcenters.json`),
+      fetchJSON(`${DATA_BASE_URL}/emergency.json`),
+      fetchJSON(`${DATA_BASE_URL}/events.json`),
+      fetchJSON(`${DATA_BASE_URL}/pages.json`),
+      fetchJSON(`${DATA_BASE_URL}/contacts.json`)
+    ]);
+    saveLS("bilse_locations",locs); saveLS("bilse_jobcenters",jcs); saveLS("bilse_emergency",emg);
+    saveLS("bilse_events",evs); saveLS("bilse_pages",pgs); saveLS("bilse_contacts",cts);
+    localStorage.setItem('bilse_seed_version',SEED_VERSION);
+  }catch(e){console.warn('Seed load failed',e)}
+}
+
+/* ===== „Mein Standort“ ===== */
+function setMyLocation(id){MY_LOCATION=id;localStorage.setItem("bilse_my_location",id);populateMyLocationSelect();renderLocations();renderEvents();renderJobcenter();renderContacts();const current=$(".tab.active")?.dataset.tab;if(current==="pages"&&$("#page-select").value==="kontakt")renderKontakt();updateStartStats()}
+function initMyLocation(){MY_LOCATION=localStorage.getItem("bilse_my_location")||"all"}
+function populateMyLocationSelect(){const sel=$("#my-location"); sel.innerHTML=""; const optAll=document.createElement("option"); optAll.value="all"; optAll.textContent="Alle Standorte"; sel.appendChild(optAll); LOCATIONS.forEach(l=>{const o=document.createElement("option");o.value=String(l.id);o.textContent=`${l.city} – ${l.label}`; sel.appendChild(o)}); sel.value=MY_LOCATION; sel.onchange=()=>setMyLocation(sel.value)}
+
+/* ===== Tabs ===== */
+function setActiveTab(t){
+  $$(".tab").forEach(b=>b.classList.toggle("active", b.dataset.tab===t));
+  for(const sec of TABS){ const el=document.getElementById(sec); if(el) el.classList.toggle("hidden", sec!==t); }
+
+  if (t==="pages"){ const sel=$("#page-select"); renderPage(sel?sel.value:"projekt"); }
+  if (t==="jobcenter") renderJobcenter();
+  if (t==="notfall")  renderEmergency();
+  if (t==="projekt")  renderContacts();
+  if (t==="start")    updateStartStats();
+
+  if (t==="dev"){ refreshEditors(); buildMappingUI(); }
+}
+
+/* ===== Leaflet Maps ===== */
+let locMap=null, locMarkers=[], evMap=null, evMarkers=[], jcMap=null, jcMarker=null;
+function ensureLocMap(){if(locMap) return locMap; locMap=L.map('loc-map').setView([53.7,11.8],8); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(locMap); return locMap}
+function renderLocMarkers(){
+  ensureLocMap();
+  locMarkers.forEach(m=>m.remove()); locMarkers=[];
+  LOCATIONS.forEach(l=>{
+    if(!(l.lat&&l.lng)) return;
+    const m=L.marker([l.lat,l.lng]).addTo(locMap);
+    m.bindPopup(`<strong>${l.city}</strong><br>${l.label}<br><a href="${routeURL(`${l.street} ${l.house_number}, ${l.postal_code} ${l.city}`)}" target="_blank">Route</a><br><button id="setmine_${l.id}">Als meinen Standort wählen</button>`);
+    m.on('popupopen',()=>{setTimeout(()=>{const b=document.getElementById(`setmine_${l.id}`); if(b) b.onclick=()=>setMyLocation(String(l.id));},0)});
+    locMarkers.push(m);
+  });
+  if(MY_LOCATION==="all"){
+    const pts=LOCATIONS.filter(l=>l.lat&&l.lng).map(l=>[l.lat,l.lng]);
+    if(pts.length){locMap.fitBounds(pts,{padding:[20,20]});}
+  }else{
+    const sel=getLocationById(MY_LOCATION);
+    if(sel?.lat&&sel?.lng) locMap.setView([sel.lat, sel.lng], 12);
+  }
+}
+function ensureEvMap(){if(evMap) return evMap; evMap=L.map('ev-map').setView([53.7,11.8],8); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(evMap); return evMap}
+function renderEventMarkers(list){
+  ensureEvMap();
+  evMarkers.forEach(m=>m.remove()); evMarkers=[];
+  const bounds=[];
+  list.forEach(e=>{
+    const loc=getLocationById(e.location_id);
+    const lat=e.lat || (loc?loc.lat:null); const lng=e.lng || (loc?loc.lng:null);
+    if(!(lat&&lng)) return;
+    const m=L.marker([lat,lng]).addTo(evMap);
+    m.bindPopup(`<strong>${e.title}</strong><br>${fmtDateRange(e.starts_at,e.ends_at)}<br><em>${e.source==='public'?'Öffentlich':'Projekt'}</em>`);
+    bounds.push([lat,lng]); evMarkers.push(m);
+  });
+  if(bounds.length){evMap.fitBounds(bounds,{padding:[20,20]});}
+}
+function ensureJcMap(){if(jcMap) return jcMap; jcMap=L.map('jc-map').setView([53.7,11.8],9); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(jcMap); return jcMap}
+async function renderJCMapForAddress(address){
+  const mapEl=$("#jc-map"); mapEl.classList.remove("hidden");
+  ensureJcMap();
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+    const res=await fetch(url,{headers:{'Accept':'application/json','User-Agent':'bilse-demo/1.0'}});
+    const js=await res.json();
+    if(js&&js[0]){const {lat,lon}=js[0]; if(jcMarker) jcMarker.remove(); jcMarker=L.marker([+lat,+lon]).addTo(jcMap); jcMap.setView([+lat,+lon], 14);}
+  }catch(e){/* ignore */ }
+}
+
+/* ===== Standorte UI ===== */
+function renderLocations(){
+  const q=$("#loc-search").value.trim().toLowerCase(); const sort=$("#loc-sort").value;
+  let list=LOCATIONS.filter(l=>{const hay=`${l.label} ${l.city} ${l.postal_code} ${l.service_areas.join(" ")}`.toLowerCase();return hay.includes(q)});
+  list.sort((a,b)=>{if(sort==="label")return a.label.localeCompare(b.label,"de");if(sort==="postal")return a.postal_code.localeCompare(b.postal_code,"de");return a.city.localeCompare(b.city,"de")});
+  const grid=$("#loc-grid"); grid.innerHTML="";
+  for(const l of list){
+    const jc=getJCById(l.jobcenter_id); const addr=`${l.street} ${l.house_number}, ${l.postal_code} ${l.city}`;
+    const services=l.service_areas?.map(a=>`<span class="tag">${a}</span>`).join("")||""; const isMine=String(MY_LOCATION)===String(l.id);
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`
+      <div class="kicker">${l.city} · ${l.postal_code}</div>
+      <div class="title">${l.label} ${isMine?'<span class="tag">Mein Standort</span>':''}</div>
+      <div class="addr">${addr}</div>
+      <div class="row">
+        ${l.phone_e164?`<a class="button" href="tel:${l.phone_e164}">Anrufen</a>`:""}
+        <a class="button" href="${routeURL(addr)}" target="_blank">Route</a>
+        <button class="button" data-setmine="${l.id}">${isMine?'Ausgewählt':'Als meinen Standort wählen'}</button>
+        ${jc?`<a class="button" href="${jc.website_url}" target="_blank" rel="noopener">Jobcenter</a>`:""}
+      </div>
+      <div class="row"><span class="small">${l.phone_display||""}</span>${jc?`<span class="small"> · Zust. JC: ${jc.name}</span>`:""}</div>
+      <div class="tags">${services}</div>`;
+    grid.appendChild(card);
+  }
+  grid.querySelectorAll("button[data-setmine]").forEach(b=>b.addEventListener("click",()=>setMyLocation(b.getAttribute("data-setmine"))));
+  renderLocMarkers();
+}
+
+/* ===== Kalender / Events ===== */
+function renderEvents(){
+  const q=$("#ev-search").value.trim().toLowerCase(); const cat=$("#ev-category").value; const src=$("#ev-source").value;
+  let list=EVENTS.filter(e=>{
+    const textMatch=`${e.title} ${e.description}`.toLowerCase().includes(q);
+    const catMatch=!cat||e.category===cat;
+    const srcMatch=!src||e.source===src;
+    const locMatch=(MY_LOCATION==="all")||(String(e.location_id)===String(MY_LOCATION));
+    return textMatch&&catMatch&&srcMatch&&locMatch;
+  }).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+
+  const grid=$("#ev-grid"); grid.innerHTML="";
+  const hint=$("#ev-hint");
+  if(MY_LOCATION==="all"){hint.textContent="Es werden Veranstaltungen aus allen Standorten angezeigt."}
+  else{const loc=getLocationById(MY_LOCATION);hint.textContent=`Es werden Veranstaltungen für **${loc?.city||""}** angezeigt.`}
+
+  for(const e of list){
+    const when=fmtDateRange(e.starts_at,e.ends_at); const loc=getLocationById(e.location_id);
+    const where=e.free_address?e.free_address:(loc?`${loc.street} ${loc.house_number}, ${loc.postal_code} ${loc.city}`:"");
+    const phone=loc?.phone_e164; const card=document.createElement("div"); card.className="card";
+    const catTag=e.category?`<span class="tag">${e.category}</span>`:""; const srcTag=e.source?`<span class="tag">${e.source==='public'?'Öffentlich':'Projekt'}</span>`:"";
+    card.innerHTML=`
+      <div class="kicker">${when}</div>
+      <div class="title">${e.title}</div>
+      <div>${e.description||""}</div>
+      <div class="addr">${where||""}</div>
+      <div class="tags">${catTag} ${srcTag}</div>
+      <div class="row">
+        <button class="button" data-ics='${encodeURIComponent(JSON.stringify(e))}'>ICS</button>
+        ${phone?`<a class="button" href="tel:${phone}">Anrufen</a>`:""}
+      </div>`;
+    grid.appendChild(card);
+  }
+
+  const toggle=$("#ev-map-toggle"); const mapEl=$("#ev-map");
+  mapEl.classList.toggle("hidden", !toggle.checked);
+  if(toggle.checked){renderEventMarkers(list)}
+
+  grid.querySelectorAll("button[data-ics]").forEach(btn=>btn.addEventListener("click",()=>{const e=JSON.parse(decodeURIComponent(btn.getAttribute("data-ics")));downloadICS(e)}));
+}
+function downloadICS(e){
+  const loc=getLocationById(e.location_id); const address=e.free_address||(loc?`${loc.street} ${loc.house_number}, ${loc.postal_code} ${loc.city}`:"");
+  const dt=(s)=>s.replace(/[-:]/g,"").replace(".000","").replace("Z","Z");
+  const uid=`${Date.now()}-${Math.random().toString(36).slice(2)}@bilse.local`;
+  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//BilSE//U(H)rWerk+//DE","BEGIN:VEVENT",`UID:${uid}`,`DTSTAMP:${dt(new Date().toISOString())}`,`DTSTART:${dt(e.starts_at)}`,e.ends_at?`DTEND:${dt(e.ends_at)}`:null,`SUMMARY:${escapeICS(e.title)}`,e.description?`DESCRIPTION:${escapeICS(e.description)}`:null,address?`LOCATION:${escapeICS(address)}`:null,"END:VEVENT","END:VCALENDAR"].filter(Boolean).join("\r\n");
+  const blob=new Blob([lines],{type:"text/calendar;charset=utf-8"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=(e.title||"event")+".ics"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+/* ===== Seiten ===== */
+function renderKontakt(){
+  const p = PAGES?.kontakt || {title:"Kontakt"};
+  const loc = (MY_LOCATION==="all") ? null : getLocationById(MY_LOCATION);
+
+  $("#page-title").textContent = p.title || "Kontakt";
+  const container = $("#page-content"); if(!container) return;
+
+  if (!loc) {
+    container.innerHTML = `<div class="small">Wähle oben „Mein Standort“, um die Kontaktdaten zu sehen.</div>`;
+  } else {
+    const addr = `${loc.street} ${loc.house_number}, ${loc.postal_code} ${loc.city}`;
+    const services = (loc.service_areas||[]).map(a=>`<span class="tag">${a}</span>`).join("");
+    container.innerHTML = `
+      <div class="kicker">${loc.city} · ${loc.postal_code}</div>
+      <div class="title">${loc.label} <span class="tag">Mein Standort</span></div>
+      <div class="addr">${addr}</div>
+      <div class="row">
+        ${loc.phone_e164?`<a class="button" href="tel:${loc.phone_e164}">Anrufen</a>`:""}
+        <a class="button" href="${routeURL(addr)}" target="_blank">Route</a>
+        <span class="small">${loc.phone_display||""}</span>
+      </div>
+      <div class="tags">${services}</div>`;
+  }
+}
+function renderPage(slug){
+  const view = $("#page-view");
+  if (view && (!$("#page-title") || !$("#page-content"))){
+    view.innerHTML = `<h2 class="title" id="page-title"></h2><div id="page-content"></div>`;
+  }
+
+  const sel=$("#page-select");
+  if(!slug && sel) slug=sel.value;
+  if(sel && sel.value!==slug) sel.value=slug;
+
+  const p = (PAGES && typeof PAGES==='object') ? PAGES[slug] : null;
+
+  if (slug==="kontakt") { renderKontakt(); return; }
+
+  if (!p){
+    $("#page-title").textContent = 'Seite nicht gefunden';
+    const keys = (PAGES && typeof PAGES==='object') ? Object.keys(PAGES) : [];
+    $("#page-content").innerHTML = `<div class="small">Kein Inhalt für <code>${slug}</code> gefunden.<br>Verfügbare Seiten: ${keys.join(', ')||'–'}</div>`;
+    return;
+  }
+
+  $("#page-title").textContent = p.title || slug;
+  const md = p.content_markdown ?? p.content ?? '';
+  $("#page-content").innerHTML = md ? mdToHtml(md) : '<div class="small">Noch kein Inhalt hinterlegt.</div>';
+}
+
+/* ===== Jobcenter ===== */
+function renderJobcenter(){
+  const wrap=$("#jc-content"), panels=$("#jc-panels"); wrap.innerHTML=""; panels.innerHTML="";
+  const loc=(MY_LOCATION==="all")?null:getLocationById(MY_LOCATION);
+  if(!loc){wrap.innerHTML=`<div class="small">Bitte oben „Mein Standort“ wählen.</div>`;$("#jc-map").classList.add("hidden");return}
+  const jc=getJCById(loc.jobcenter_id);
+  if(!jc){wrap.innerHTML=`<div class="small">Für <strong>${loc.city}</strong> ist noch kein Jobcenter hinterlegt.</div>`;$("#jc-map").classList.add("hidden");return}
+  wrap.innerHTML = `
+    <div class="row">
+      <div><strong>${jc.name}</strong><br><span class="small">${jc.region||""}</span></div>
+    </div>
+    <div class="row"><span class="addr">${jc.contact?.address||""}</span></div>
+    <div class="row">
+      ${jc.contact?.phone?`<a class="button" href="tel:${jc.contact.phone}">Anrufen</a>`:""}
+      ${jc.website_url?`<a class="button" href="${jc.website_url}" target="_blank" rel="noopener">Website</a>`:""}
+      ${jc.downloads_url?`<a class="button" href="${jc.downloads_url}" target="_blank" rel="noopener">Downloadcenter</a>`:""}
+      ${jc.digital_url?`<a class="button" href="${jc.digital_url}" target="_blank" rel="noopener">Jobcenter.Digital</a>`:""}
+      ${jc.contact?.address?`<a class="button" href="${routeURL(jc.contact.address)}" target="_blank">Route</a>`:""}
+    </div>
+    <div class="small">${jc.contact?.opening_hours?`Öffnungszeiten: ${jc.contact.opening_hours}`:""}</div>
+    ${jc.contact?.email?`<div class="small">E-Mail: ${jc.contact.email}</div>`:""}
+  `;
+  if(jc.contact?.address){renderJCMapForAddress(jc.contact.address)}
+  else{$("#jc-map").classList.add("hidden")}
+}
+
+/* ===== Notfall ===== */
+function renderEmergency(){
+  const el=$("#emergency-list"); el.innerHTML="";
+  EMERGENCY.forEach(n=>{const row=document.createElement("div"); row.className="row"; row.innerHTML = `<a class="button" href="tel:${n.tel}">${n.label}</a>`; el.appendChild(row);});
+}
+
+/* ===== Projekt (Contacts) ===== */
+function renderContacts(){
+  const host=$("#contacts-list"); host.innerHTML="";
+  const loc=(MY_LOCATION==="all")?null:getLocationById(MY_LOCATION);
+  if(!loc){host.innerHTML=`<div class="small">Bitte oben „Mein Standort“ wählen.</div>`; return;}
+  const list=CONTACTS.filter(c=>String(c.location_id)===String(MY_LOCATION));
+  if(!list.length){host.innerHTML=`<div class="small">Für <strong>${loc.city}</strong> sind noch keine Ansprechpartner:innen hinterlegt. Pflege im Dev-Tab.</div>`; return;}
+  list.forEach(c=>{
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`
+      <div class="title">${c.name}</div>
+      <div class="small">${c.role||""}</div>
+      <div class="row">
+        ${c.phone_e164?`<a class="button" href="tel:${c.phone_e164}">Anrufen</a>`:""}
+        ${c.email?`<a class="button" href="mailto:${c.email}">E-Mail</a>`:""}
+      </div>
+      <div class="small">${c.office_hours?`Sprechzeiten: ${c.office_hours}`:""}</div>
+      ${c.notes?`<div class="small">${c.notes}</div>`:""}
+    `;
+    host.appendChild(card);
+  });
+}
+
+/* ===== Dev: Mapping + Geocode + Editors ===== */
+function buildMappingUI(){
+  const host=$("#map-jc"); host.innerHTML="";
+  LOCATIONS.forEach(l=>{
+    const row=document.createElement("div"); row.className="row";
+    const sel=document.createElement("select"); sel.className="select";
+    JOBCENTERS.forEach(jc=>{const o=document.createElement("option"); o.value=jc.id; o.textContent=jc.name; sel.appendChild(o)});
+    sel.value=l.jobcenter_id||""; sel.onchange=()=>{l.jobcenter_id=sel.value; saveLS("bilse_locations",LOCATIONS); renderLocations(); renderJobcenter()};
+    const geoBtn=document.createElement("button"); geoBtn.className="button ghost"; geoBtn.textContent="Geocode"; geoBtn.onclick=()=>geocodeLocation(l);
+    const latInput=document.createElement("input"); latInput.className="input"; latInput.placeholder="lat"; latInput.style.minWidth="120px"; latInput.value=l.lat??"";
+    const lngInput=document.createElement("input"); lngInput.className="input"; lngInput.placeholder="lng"; lngInput.style.minWidth="120px"; lngInput.value=l.lng??"";
+    latInput.onchange=()=>{l.lat=parseFloat(latInput.value); saveLS("bilse_locations",LOCATIONS); renderLocMarkers()};
+    lngInput.onchange=()=>{l.lng=parseFloat(lngInput.value); saveLS("bilse_locations",LOCATIONS); renderLocMarkers()};
+    row.innerHTML = `<span class="small" style="min-width:280px"><strong>${l.city}</strong> – ${l.label}</span>`;
+    row.appendChild(sel); row.appendChild(latInput); row.appendChild(lngInput); row.appendChild(geoBtn);
+    host.appendChild(row);
+  });
+  const icsSel=$("#ics-location"); icsSel.innerHTML=""; LOCATIONS.forEach(l=>{const o=document.createElement("option"); o.value=l.id; o.textContent=`${l.city} – ${l.label}`; icsSel.appendChild(o)});
+  const ctSel=$("#ct-location"); ctSel.innerHTML=""; LOCATIONS.forEach(l=>{const o=document.createElement("option"); o.value=l.id; o.textContent=`${l.city} – ${l.label}`; ctSel.appendChild(o)});
+}
+
+async function geocodeLocation(l){
+  const q=`${l.street||""} ${l.house_number||""}, ${l.postal_code||""} ${l.city||""}, Deutschland`;
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+    const res=await fetch(url,{headers:{'Accept':'application/json','User-Agent':'bilse-demo/1.0'}});
+    const js=await res.json();
+    if(js&&js[0]){l.lat=+js[0].lat; l.lng=+js[0].lon; saveLS("bilse_locations",LOCATIONS); buildMappingUI(); renderLocMarkers(); alert(`${l.city}: Koordinaten gesetzt.`);}
+    else alert("Kein Treffer für: "+q);
+  }catch(e){alert("Geocode fehlgeschlagen");}
+}
+
+function refreshEditors(){
+  $("#loc-count").textContent=LOCATIONS.length; $("#ev-count").textContent=EVENTS.length; $("#pg-count").textContent=Object.keys(PAGES).length; $("#jc-count").textContent=JOBCENTERS.length; $("#ct-count").textContent=CONTACTS.length;
+  $("#loc-json").value=JSON.stringify(LOCATIONS,null,2);
+  $("#ev-json").value=JSON.stringify(EVENTS,null,2);
+  $("#pg-json").value=JSON.stringify(PAGES,null,2);
+  $("#jc-json").value=JSON.stringify(JOBCENTERS,null,2);
+  $("#ct-json").value=JSON.stringify(CONTACTS,null,2);
+}
+
+/* File helpers */
+function readJSONFile(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{try{res(JSON.parse(r.result))}catch(e){rej(e)}};r.onerror=rej;r.readAsText(file)})}
+
+/* ICS minimal parser → Events (source=public) */
+async function importICS(file, location_id){
+  const txt = await file.text();
+  const lines = txt.split(/\r?\n/);
+  let evs=[]; let cur=null;
+  for(let raw of lines){
+    const line = raw.replace(/\r$/,"");
+    if(line==="BEGIN:VEVENT"){cur={title:"",description:"",starts_at:"",ends_at:"",location_id,source:"public",category:"bildung"}}
+    else if(line==="END:VEVENT"){if(cur&&cur.starts_at){cur.id=Date.now()+Math.floor(Math.random()*100000); evs.push(cur)} cur=null}
+    else if(cur){
+      const [k,...rest]=line.split(":"); const v=rest.join(":");
+      if(k.startsWith("DTSTART")){cur.starts_at=parseICSDate(v)}
+      else if(k.startsWith("DTEND")){cur.ends_at=parseICSDate(v)}
+      else if(k==="SUMMARY"){cur.title=v}
+      else if(k==="DESCRIPTION"){cur.description=v?.replace(/\\n/g,"\n")}
+      else if(k==="LOCATION"){cur.free_address=v}
+    }
+  }
+  EVENTS = EVENTS.concat(evs).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  saveLS("bilse_events",EVENTS); refreshEditors(); renderEvents(); updateStartStats();
+  alert(`Import fertig: ${evs.length} Termine`);
+}
+function parseICSDate(s){
+  if(!s) return "";
+  if(s.endsWith("Z")){
+    const y=s.slice(0,4),m=s.slice(4,6),d=s.slice(6,8),hh=s.slice(9,11),mm=s.slice(11,13),ss=s.slice(13,15);
+    return new Date(Date.UTC(+y,+m-1,+d,+hh||0,+mm||0,+ss||0)).toISOString();
+  }else{
+    const y=s.slice(0,4),m=s.slice(4,6),d=s.slice(6,8),hh=s.slice(9,11)||"00",mm=s.slice(11,13)||"00",ss=s.slice(13,15)||"00";
+    const dt = new Date(+y,+m-1,+d,+hh,+mm,+ss);
+    return new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString();
+  }
+}
+
+/* ===== Start: Stats & Quick Navigation ===== */
+function updateStartStats(){
+  $("#stat-loc").textContent = LOCATIONS.length;
+  const upcoming = EVENTS.filter(e=>new Date(e.ends_at||e.starts_at) > new Date()).length;
+  $("#stat-ev").textContent = upcoming;
+  $("#stat-jc").textContent = JOBCENTERS.length;
+  $("#stat-ct").textContent = CONTACTS.length;
+  $("#stat-ver").textContent = localStorage.getItem('bilse_seed_version') || 'Defaults';
+}
+
+/* ===== Bindings ===== */
+function bindUI(){
+  // Tabs
+  for(const btn of $$(".tab")){btn.addEventListener("click",()=>setActiveTab(btn.dataset.tab))}
+
+  // Sprache
+  $$(".lang button").forEach(b=>b.addEventListener("click",()=>{$(".lang button.active")?.classList.remove("active"); b.classList.add("active"); LANG=b.dataset.lang; populateMyLocationSelect(); renderLocations(); renderEvents(); renderPage($("#page-select").value); renderJobcenter(); renderContacts();}));
+
+  // Inputs
+  $("#loc-search").addEventListener("input",renderLocations);
+  $("#loc-sort").addEventListener("change",renderLocations);
+  $("#ev-search").addEventListener("input",renderEvents);
+  $("#ev-category").addEventListener("change",renderEvents);
+  $("#ev-source").addEventListener("change",renderEvents);
+  $("#ev-map-toggle").addEventListener("change",renderEvents);
+
+  // Infos: robuster Listener
+  const pageSel=$("#page-select");
+  if(pageSel){const onPage=(e)=>renderPage(e.target.value); pageSel.addEventListener("change",onPage); pageSel.addEventListener("input",onPage)}
+
+  // Quick goto (Start-Buttons/Kacheln)
+  document.body.addEventListener("click",(e)=>{
+    const t=e.target.closest("[data-goto]");
+    if(t){ setActiveTab(t.getAttribute("data-goto")); }
+  });
+
+  // Dev editor buttons
+  $("#apply-loc").addEventListener("click",()=>{try{LOCATIONS=JSON.parse($("#loc-json").value);saveLS("bilse_locations",LOCATIONS);buildMappingUI();populateMyLocationSelect();renderLocations();updateStartStats();alert("Standorte übernommen.");}catch(e){alert("Fehler in locations.json")}});
+  $("#apply-ev").addEventListener("click",()=>{try{EVENTS=JSON.parse($("#ev-json").value);saveLS("bilse_events",EVENTS);renderEvents();updateStartStats();alert("Events übernommen.");}catch(e){alert("Fehler in events.json")}});
+  $("#apply-pg").addEventListener("click",()=>{try{PAGES=JSON.parse($("#pg-json").value);saveLS("bilse_pages",PAGES);renderPage($("#page-select").value);alert("Seiten übernommen.");}catch(e){alert("Fehler in pages.json")}});
+  $("#apply-jc").addEventListener("click",()=>{try{JOBCENTERS=JSON.parse($("#jc-json").value);saveLS("bilse_jobcenters",JOBCENTERS);buildMappingUI();renderJobcenter();updateStartStats();alert("Jobcenter übernommen.");}catch(e){alert("Fehler in jobcenters.json")}});
+  $("#apply-ct").addEventListener("click",()=>{try{CONTACTS=JSON.parse($("#ct-json").value);saveLS("bilse_contacts",CONTACTS);renderContacts();updateStartStats();alert("Contacts übernommen.");}catch(e){alert("Fehler in contacts.json")}});
+
+  // Import/Export JSON
+  $("#export-loc").addEventListener("click",()=>downloadJSON("locations.json",LOCATIONS));
+  $("#export-ev").addEventListener("click",()=>downloadJSON("events.json",EVENTS));
+  $("#export-pg").addEventListener("click",()=>downloadJSON("pages.json",PAGES));
+  $("#export-jc").addEventListener("click",()=>downloadJSON("jobcenters.json",JOBCENTERS));
+  $("#export-ct").addEventListener("click",()=>downloadJSON("contacts.json",CONTACTS));
+  $("#export-all").addEventListener("click",()=>{
+    const bundle={version:SEED_VERSION,generated_at:new Date().toISOString(),locations:LOCATIONS,jobcenters:JOBCENTERS,emergency:EMERGENCY,events:EVENTS,pages:PAGES,contacts:CONTACTS};
+    downloadJSON(`bilse-data-${SEED_VERSION}.json`, bundle);
+  });
+
+  $("#import-loc").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{LOCATIONS=await readJSONFile(f);saveLS("bilse_locations",LOCATIONS);refreshEditors();buildMappingUI();populateMyLocationSelect();renderLocations();updateStartStats();}catch{alert("Import locations fehlgeschlagen")}});
+  $("#import-ev").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{EVENTS=await readJSONFile(f);saveLS("bilse_events",EVENTS);refreshEditors();renderEvents();updateStartStats();}catch{alert("Import events fehlgeschlagen")}});
+  $("#import-pg").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{PAGES=await readJSONFile(f);saveLS("bilse_pages",PAGES);refreshEditors();renderPage($("#page-select").value);}catch{alert("Import pages fehlgeschlagen")}});
+  $("#import-jc").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{JOBCENTERS=await readJSONFile(f);saveLS("bilse_jobcenters",JOBCENTERS);refreshEditors();buildMappingUI();renderJobcenter();updateStartStats();}catch{alert("Import jobcenters fehlgeschlagen")}});
+  $("#import-ct").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{CONTACTS=await readJSONFile(f);saveLS("bilse_contacts",CONTACTS);refreshEditors();renderContacts();updateStartStats();}catch{alert("Import contacts fehlgeschlagen")}});
+
+  // ICS Import
+  $("#import-ics-run").addEventListener("click",()=>{const f=$("#import-ics").files?.[0]; const locId=$("#ics-location").value; if(!f) return alert("Bitte .ics wählen"); importICS(f, Number(locId));});
+
+  // Add buttons
+  $("#add-loc").addEventListener("click",()=>{const id=Math.max(0,...LOCATIONS.map(l=>+l.id))+1; LOCATIONS.push({"id":id,"label":"Neuer Standort","street":"","house_number":"","postal_code":"","city":"","phone_display":"","phone_e164":"","service_areas":[],"jobcenter_id":JOBCENTERS[0]?.id||"","lat":0,"lng":0}); refreshEditors(); buildMappingUI(); updateStartStats();});
+  $("#add-ev").addEventListener("click",()=>{const id=Math.max(0,...EVENTS.map(e=>+e.id))+1; EVENTS.push({"id":id,"title":"Neuer Termin","description":"","starts_at":new Date().toISOString(),"ends_at":new Date(Date.now()+3600e3).toISOString(),"category":"bildung","location_id":LOCATIONS[0]?.id||1,"source":"project"}); refreshEditors(); updateStartStats();});
+  $("#add-pg").addEventListener("click",()=>{PAGES["neu"]={"title":"Neue Seite","content_markdown":"Inhalt…"}; refreshEditors();});
+  $("#add-jc").addEventListener("click",()=>{JOBCENTERS.push({"id":"jc_neu_"+Date.now(),"name":"Neues Jobcenter","region":"","website_url":"","downloads_url":"","digital_url":"https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld","contact":{"phone":"","email":"","address":"","opening_hours":""}}); refreshEditors(); buildMappingUI(); updateStartStats();});
+  $("#add-ct").addEventListener("click",()=>{const id=Math.max(0,...CONTACTS.map(c=>+c.id))+1; const lId=Number($("#ct-location").value||MY_LOCATION||LOCATIONS[0]?.id||1); CONTACTS.push({"id":id,"location_id":lId,"name":"Neue Person","role":"","phone_e164":"","email":"","office_hours":"","notes":""}); refreshEditors(); renderContacts(); updateStartStats();});
+
+  // Save/reset
+  $("#save-local").addEventListener("click",()=>{saveLS("bilse_locations",LOCATIONS);saveLS("bilse_events",EVENTS);saveLS("bilse_pages",PAGES);saveLS("bilse_jobcenters",JOBCENTERS);saveLS("bilse_emergency",EMERGENCY);saveLS("bilse_contacts",CONTACTS);alert("Gespeichert (Browser).")});
+
+  $("#reset-local").addEventListener("click",()=>{
+    ["bilse_locations","bilse_events","bilse_pages","bilse_jobcenters","bilse_emergency","bilse_contacts","bilse_seed_version","bilse_my_location"].forEach(k=>localStorage.removeItem(k));
+    location.reload();
+  });
+
+  // Geocode all
+  $("#geocode-all").addEventListener("click",async()=>{for(const l of LOCATIONS){await geocodeLocation(l)}});
+}
+
+/* Dev-Toggle (Alt+D → PIN 2468) */
+window.addEventListener("keydown",(e)=>{if(e.altKey && e.key.toLowerCase()==="d"){const pin=prompt("PIN für Dev (2468)"); if(pin==="2468"){$("#dev-tab").style.display="inline-block"; setActiveTab('dev'); refreshEditors(); buildMappingUI();}}});
+
+/* ===== Init ===== */
+function initData(){
+  LOCATIONS = loadLS("bilse_locations") || DEFAULT_LOCATIONS;
+  JOBCENTERS= loadLS("bilse_jobcenters")|| DEFAULT_JOBCENTERS;
+  EMERGENCY = loadLS("bilse_emergency") || DEFAULT_EMERGENCY;
+  EVENTS    = loadLS("bilse_events")    || DEFAULT_EVENTS;
+  PAGES     = loadLS("bilse_pages")     || DEFAULT_PAGES;
+  CONTACTS  = loadLS("bilse_contacts")  || DEFAULT_CONTACTS;
+
+  // Migration: falls PAGES als Array geliefert wurde
+  if (Array.isArray(PAGES)) {
+    const obj = {};
+    for (const item of PAGES) {
+      const slug = item.slug || (item.title ? item.title.toLowerCase().replace(/\s+/g,'-') : 'seite');
+      obj[slug] = { title: item.title || slug, content_markdown: item.content_markdown ?? item.content ?? '' };
+    }
+    PAGES = obj; saveLS("bilse_pages", PAGES);
+  }
+}
+
+(async function init(){
+  await loadSeed();
+  initData();
+  initMyLocation(); bindUI(); populateMyLocationSelect();
+
+  // Light Theme aktivieren
+  document.body.classList.add('light');
+
+  // Dev-Tab automatisch zeigen, wenn lokal – UND direkt befüllen
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    const devBtn = document.getElementById('dev-tab');
+    if (devBtn) devBtn.style.display = 'inline-block';
+    refreshEditors();
+    buildMappingUI();
+  }
+
+  // Datenstand im Footer
+  const verEl=document.getElementById('data-ver'); if(verEl) verEl.textContent=localStorage.getItem('bilse_seed_version')||'Defaults';
+
+  ensureLocMap(); renderLocMarkers();
+  renderLocations(); renderEvents(); renderPage("projekt"); renderJobcenter(); renderEmergency(); renderContacts();
+
+  setActiveTab('start'); updateStartStats();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "jc_lup",
+    "name": "Jobcenter Ludwigslust-Parchim",
+    "region": "Landkreis Ludwigslust-Parchim",
+    "website_url": "https://www.jobcenter-lwl-pch.de/",
+    "downloads_url": "https://www.jobcenter-lwl-pch.de/service/downloads",
+    "digital_url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld",
+    "contact": {
+      "phone": "+49 3871 6345-0",
+      "email": null,
+      "address": "Ludwigsluster Chaussee 5, 19370 Parchim",
+      "opening_hours": "Siehe Website"
+    }
+  },
+  {
+    "id": "jc_schwerin",
+    "name": "Jobcenter Schwerin",
+    "region": "Landeshauptstadt Schwerin",
+    "website_url": "https://www.schwerin.de/mein-schwerin/leben/gesellschaft-soziales/sozialleistungen/jobcenter/",
+    "downloads_url": "https://www.arbeitsagentur.de/downloads",
+    "digital_url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld",
+    "contact": {
+      "phone": "+49 385 450-5892",
+      "email": null,
+      "address": "Am Margaretenhof 14–16, 19057 Schwerin",
+      "opening_hours": "Siehe Website"
+    }
+  },
+  {
+    "id": "jc_nwm",
+    "name": "Jobcenter Nordwestmecklenburg",
+    "region": "Landkreis Nordwestmecklenburg",
+    "website_url": "https://www.jobcenter-nwm.de/",
+    "downloads_url": "https://www.jobcenter-nwm.de/formulare-merkblaetter/",
+    "digital_url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld",
+    "contact": {
+      "phone": "+49 3841 414-0",
+      "email": "JC-Nordwestmecklenburg@jobcenter-ge.de",
+      "address": "Werkstraße 2, 23970 Wismar",
+      "opening_hours": "Siehe Website"
+    }
+  },
+  {
+    "id": "jc_lro",
+    "name": "Jobcenter Landkreis Rostock",
+    "region": "Landkreis Rostock",
+    "website_url": "https://www.arbeitsagentur.de/vor-ort/jobcenter/jobcenter-landkreis-rostock-guestrow.html",
+    "downloads_url": "https://www.arbeitsagentur.de/downloads",
+    "digital_url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld",
+    "contact": {
+      "phone": "+49 3843 775-0",
+      "email": "Jobcenter-Landkreis-Rostock@jobcenter-ge.de",
+      "address": "Eisenbahnstr. 12, 18273 Güstrow",
+      "opening_hours": "Siehe Website"
+    }
+  },
+  {
+    "id": "jc_hanse_rostock",
+    "name": "Hanse-Jobcenter Rostock",
+    "region": "Hansestadt Rostock",
+    "website_url": "https://www.arbeitsagentur.de/vor-ort/jobcenter/hanse-jobcenter-rostock-rostock.html",
+    "downloads_url": "https://www.arbeitsagentur.de/downloads",
+    "digital_url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/buergergeld",
+    "contact": {
+      "phone": "+49 381 4611-0",
+      "email": "hanse-jobcenter-rostock@jobcenter-ge.de",
+      "address": "Erich-Schlesinger-Str. 35, 18059 Rostock",
+      "opening_hours": "Siehe Website"
+    }
+  }
+]
